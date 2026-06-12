@@ -187,7 +187,7 @@ function copyProfit(){let d=calc();copyText(`内部利润分析
 window.onload=function(){
 ["fee","profit","costRate","costFee","fixedCostUsd","fixedCostRmb"].forEach(id=>{let v=localStorage.getItem("beauty_"+id+"_v31");if(v!==null)document.getElementById(id).value=v});
 let ex=localStorage.getItem("beauty_ex_v31");if(ex!==null)document.getElementById("ex").value=ex;
-calc();
+calc(); 
 }
 </script>
 </body>
