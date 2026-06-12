@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>美邮购报价计算器 V2</title>
+<style>
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  margin:0;padding:16px;background:#f5f7fb;color:#111;
+}
+.card{
+  max-width:560px;margin:auto;background:#fff;border-radius:20px;
+  padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.08);
+}
+h1{font-size:24px;margin:0 0 6px;color:#0047b3}
+.sub{font-size:14px;color:#666;margin-bottom:16px}
+label{display:block;font-weight:800;margin-top:14px;margin-bottom:7px}
+select,input{
+  width:100%;box-sizing:border-box;font-size:21px;padding:13px;
+  border:1px solid #ccc;border-radius:12px;background:#fff;
+}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rateGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.rateBtn{
+  font-size:20px;padding:12px;border-radius:12px;border:1px solid #0057d9;
+  background:#eef5ff;color:#0057d9;font-weight:900;
+}
+.rateBtn.active{background:#0057d9;color:white}
+button{
+  width:100%;margin-top:15px;font-size:20px;padding:14px;border:0;
+  border-radius:12px;background:#0057d9;color:white;font-weight:900;
+}
+.secondary{background:#333}
+.result{
+  margin-top:18px;padding:16px;border-radius:16px;
+  background:#eef5ff;border:1px solid #c9ddff;
+}
+.big{font-size:44px;font-weight:900;color:#d90000;margin:8px 0}
+.usd{font-size:28px;font-weight:900;color:#0047b3;margin:8px 0}
+.row{
+  display:flex;justify-content:space-between;border-bottom:1px solid #dbe6f8;
+  padding:9px 0;font-size:16px;gap:10px;
+}
+.row:last-child{border-bottom:0}
+.note{font-size:13px;color:#666;margin-top:13px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>美邮购报价计算器 V2</h1>
+  <div class="sub">Beauty Ship Express｜手机浏览器版</div>
+
+  <label>线路</label>
+  <select id="line" onchange="calc()">
+    <option value="A">A 食品/保健品/奶粉 $7.00/lb</option>
+    <option value="B">B 普货/日用品/衣服 $7.00/lb</option>
+    <option value="C">C 二线护肤/鞋子/衣服/饰品 $9.00/lb</option>
+    <option value="C1">C1 二线包包 $12.00/lb</option>
+    <option value="D">D 液体水奶 $6.00/lb</option>
+    <option value="E">E 普通鞋类 $7.50/lb</option>
+    <option value="H">H 电子产品/胃药 $9.50/lb</option>
+    <option value="W">W 普通手表 $10.00/lb</option>
+    <option value="U">U 回国行李 $7.50/lb</option>
+  </select>
+
+  <div class="grid">
+    <div>
+      <label>重量 lb</label>
+      <input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="5.2" oninput="calc()">
+    </div>
+    <div>
+      <label>商品价值 $</label>
+      <input id="value" type="number" inputmode="decimal" step="0.01" value="0" oninput="calc()">
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <label>操作费 $</label>
+      <input id="fee" type="number" inputmode="decimal" step="0.01" value="2" oninput="calc()">
+    </div>
+    <div>
+      <label>固定利润 $</label>
+      <input id="profit" type="number" inputmode="decimal" step="0.01" value="10" oninput="calc()">
+    </div>
+  </div>
+
+  <label>汇率</label>
+  <input id="ex" type="number" inputmode="decimal" step="0.1" value="7.0" oninput="manualRate()">
+
+  <div class="rateGrid">
+    <button class="rateBtn" type="button" onclick="setRate(6.8)">6.8</button>
+    <button class="rateBtn" type="button" onclick="setRate(6.9)">6.9</button>
+    <button class="rateBtn" type="button" onclick="setRate(7.0)">7.0</button>
+    <button class="rateBtn" type="button" onclick="setRate(7.1)">7.1</button>
+  </div>
+
+  <button onclick="calc()">计算报价</button>
+
+  <div class="result">
+    <div>人民币总价</div>
+    <div class="big" id="rmb">¥0.0</div>
+    <div>美元总价</div>
+    <div class="usd" id="usd">$0.0</div>
+
+    <div class="row"><span>实际重量</span><strong id="actual">0 lb</strong></div>
+    <div class="row"><span>计费重量</span><strong id="bill">0 lb</strong></div>
+    <div class="row"><span>国际运费</span><strong id="ship">$0.0</strong></div>
+    <div class="row"><span>商品价值</span><strong id="valueOut">$0.0</strong></div>
+    <div class="row"><span>操作费</span><strong id="feeOut">$0.0</strong></div>
+    <div class="row"><span>固定利润</span><strong id="profitOut">$0.0</strong></div>
+    <div class="row"><span>当前汇率</span><strong id="exOut">7.0</strong></div>
+  </div>
+
+  <button onclick="copyTotal()">复制总价</button>
+  <button class="secondary" onclick="copyDetail()">复制明细</button>
+
+  <div class="note">
+    规则：全部进位整磅；W线2磅起，U线30磅起。操作费、固定利润、汇率会自动记住。
+  </div>
+</div>
+
+<script>
+const lines={
+  A:["A 食品/保健品/奶粉",7,1],
+  B:["B 普货/日用品/衣服",7,1],
+  C:["C 二线护肤/鞋子/衣服/饰品",9,1],
+  C1:["C1 二线包包",12,1],
+  D:["D 液体水奶",6,1],
+  E:["E 普通鞋类",7.5,1],
+  H:["H 电子产品/胃药",9.5,1],
+  W:["W 普通手表",10,2],
+  U:["U 回国行李",7.5,30]
+};
+
+function n(id){return parseFloat(document.getElementById(id).value)||0}
+function usd1(x){return "$"+Number(x||0).toFixed(1)}
+function rmb1(x){return "¥"+Number(x||0).toFixed(1)}
+function ex1(x){return Number(x||0).toFixed(1)}
+
+function getData(){
+  let key=document.getElementById("line").value;
+  let line=lines[key];
+  let weight=n("weight");
+  let value=n("value");
+  let fee=n("fee");
+  let profit=n("profit");
+  let ex=n("ex");
+  let bill=weight>0?Math.max(Math.ceil(weight),line[2]):0;
+  let ship=bill*line[1];
+  let totalUsd=ship+value+fee+profit;
+  let totalRmb=totalUsd*ex;
+  return {key,name:line[0],rate:line[1],weight,value,fee,profit,ex,bill,ship,totalUsd,totalRmb};
+}
+
+function updateRateButtons(){
+  let current=ex1(n("ex"));
+  document.querySelectorAll(".rateBtn").forEach(btn=>{
+    btn.classList.toggle("active", ex1(parseFloat(btn.innerText))===current);
+  });
+}
+
+function setRate(v){
+  document.getElementById("ex").value=ex1(v);
+  calc();
+}
+
+function manualRate(){
+  let v=n("ex");
+  document.getElementById("ex").value=ex1(v);
+  calc();
+}
+
+function calc(){
+  let d=getData();
+
+  localStorage.setItem("beauty_fee_v2",d.fee);
+  localStorage.setItem("beauty_profit_v2",d.profit);
+  localStorage.setItem("beauty_ex_v2",ex1(d.ex));
+
+  document.getElementById("rmb").innerText=rmb1(d.totalRmb);
+  document.getElementById("usd").innerText=usd1(d.totalUsd);
+  document.getElementById("actual").innerText=d.weight+" lb";
+  document.getElementById("bill").innerText=d.bill+" lb";
+  document.getElementById("ship").innerText=usd1(d.ship);
+  document.getElementById("valueOut").innerText=usd1(d.value);
+  document.getElementById("feeOut").innerText=usd1(d.fee);
+  document.getElementById("profitOut").innerText=usd1(d.profit);
+  document.getElementById("exOut").innerText=ex1(d.ex);
+
+  updateRateButtons();
+  return d;
+}
+
+function copyText(t){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>alert("已复制"));
+  }else{
+    prompt("复制以下内容：",t);
+  }
+}
+
+function copyTotal(){
+  let d=calc();
+  copyText(rmb1(d.totalRmb));
+}
+
+function copyDetail(){
+  let d=calc();
+  let text=`Beauty Ship Express 美邮购
+线路：${d.name}
+实际重量：${d.weight} lb
+计费重量：${d.bill} lb
+
+国际运费：${usd1(d.ship)}
+商品价值：${usd1(d.value)}
+操作费：${usd1(d.fee)}
+服务费：${usd1(d.profit)}
+
+美元总价：${usd1(d.totalUsd)}
+汇率：${ex1(d.ex)}
+人民币应付：${rmb1(d.totalRmb)}`;
+  copyText(text);
+}
+
+window.onload=function(){
+  if(localStorage.getItem("beauty_fee_v2"))document.getElementById("fee").value=localStorage.getItem("beauty_fee_v2");
+  if(localStorage.getItem("beauty_profit_v2"))document.getElementById("profit").value=localStorage.getItem("beauty_profit_v2");
+  if(localStorage.getItem("beauty_ex_v2"))document.getElementById("ex").value=localStorage.getItem("beauty_ex_v2");
+  calc();
+}
+</script>
+</body>
+</html>
