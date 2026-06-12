@@ -1,9 +1,11 @@
+
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>美邮购报价计算器 V3.1 测试版</title>
+<title>美邮购报价计算器 V3.2 修正版</title>
 <style>
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;margin:0;padding:16px;background:#f5f7fb;color:#111}
 .card{max-width:620px;margin:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
@@ -26,8 +28,8 @@ button{width:100%;margin-top:15px;font-size:20px;padding:14px;border:0;border-ra
 </head>
 <body>
 <div class="card">
-<h1>美邮购报价计算器 V3.1 测试版</h1>
-<div class="sub">Beauty Ship Express｜报价 + 美元成本 + 人民币成本 + 利润分析</div>
+<h1>美邮购报价计算器 V3.2 修正版</h1>
+<div class="sub">Beauty Ship Express｜报价 + 固定利润$ / 固定利润¥ + 利润分析</div>
 
 <label>线路</label>
 <select id="line" onchange="calc()">
@@ -48,18 +50,13 @@ button{width:100%;margin-top:15px;font-size:20px;padding:14px;border:0;border-ra
 </div>
 
 <div class="grid">
-<div><label>操作费 $</label><input id="fee" type="number" inputmode="decimal" step="0.01" value="2" oninput="calc()"></div>
-<div><label>固定利润 $</label><input id="profit" type="number" inputmode="decimal" step="0.01" value="10" oninput="calc()"></div>
-</div>
-
-<div class="grid">
+<div><label>操作费 $</label><input id="fee" type="number" inputmode="decimal" step="0.01" value="0" oninput="calc()"></div>
 <div><label>成本单价 $/lb</label><input id="costRate" type="number" inputmode="decimal" step="0.01" value="0" placeholder="例如 4.5" oninput="calc()"></div>
-<div><label>成本操作费 $</label><input id="costFee" type="number" inputmode="decimal" step="0.01" value="0" placeholder="可不填" oninput="calc()"></div>
 </div>
 
 <div class="grid">
-<div><label>固定成本 $</label><input id="fixedCostUsd" type="number" inputmode="decimal" step="0.01" value="0" placeholder="美国段/包材等" oninput="calc()"></div>
-<div><label>固定成本 ¥</label><input id="fixedCostRmb" type="number" inputmode="decimal" step="0.1" value="0" placeholder="国内成本/清关等" oninput="calc()"></div>
+<div><label>固定利润 $</label><input id="profitUsd" type="number" inputmode="decimal" step="0.01" value="0" oninput="calc()"></div>
+<div><label>固定利润 ¥</label><input id="profitRmb" type="number" inputmode="decimal" step="0.1" value="0" oninput="calc()"></div>
 </div>
 
 <label>汇率</label>
@@ -81,18 +78,15 @@ button{width:100%;margin-top:15px;font-size:20px;padding:14px;border:0;border-ra
 <div class="row"><span>客户运费</span><strong id="ship">$0.0</strong></div>
 <div class="row"><span>商品价值</span><strong id="valueOut">$0.0</strong></div>
 <div class="row"><span>操作费</span><strong id="feeOut">$0.0</strong></div>
-<div class="row"><span>固定利润</span><strong id="profitOut">$0.0</strong></div>
+<div class="row"><span>固定利润 $</span><strong id="profitUsdOut">$0.0</strong></div>
+<div class="row"><span>固定利润 ¥</span><strong id="profitRmbOut">¥0.0</strong></div>
+<div class="row"><span>人民币利润折美元</span><strong id="profitRmbToUsdOut">$0.0</strong></div>
 <div class="row"><span>当前汇率</span><strong id="exOut">7.0</strong></div>
 </div>
 
 <div class="result profitBox">
 <div>利润分析</div><div class="profit" id="totalProfit">$0.0</div>
 <div class="row"><span>成本运费</span><strong id="costShip">$0.0</strong></div>
-<div class="row"><span>成本操作费</span><strong id="costFeeOut">$0.0</strong></div>
-<div class="row"><span>固定成本 $</span><strong id="fixedCostUsdOut">$0.0</strong></div>
-<div class="row"><span>固定成本 ¥</span><strong id="fixedCostRmbOut">¥0.0</strong></div>
-<div class="row"><span>人民币成本折美元</span><strong id="fixedCostRmbToUsdOut">$0.0</strong></div>
-<div class="row"><span>总成本</span><strong id="totalCost">$0.0</strong></div>
 <div class="row"><span>运费毛利</span><strong id="shipProfit">$0.0</strong></div>
 <div class="row"><span>总利润率</span><strong id="margin">0.0%</strong></div>
 <div class="row"><span>运费利润率</span><strong id="shipMargin">0.0%</strong></div>
@@ -105,15 +99,22 @@ button{width:100%;margin-top:15px;font-size:20px;padding:14px;border:0;border-ra
 
 <div class="note">
 规则：全部进位整磅；W线2磅起，U线30磅起。<br>
-利润公式：总利润 = 客户运费 + 操作费 + 固定利润 - 成本运费 - 成本操作费 - 固定成本$ - 固定成本¥÷汇率。
+报价公式：人民币总价 =（客户运费 + 商品价值 + 操作费 + 固定利润$）× 汇率 + 固定利润¥。<br>
+利润公式：总利润 = 客户运费 + 操作费 + 固定利润$ + 固定利润¥÷汇率 - 成本运费。
 </div>
 </div>
 
 <script>
 const lines={
-A:["A 食品/保健品/奶粉",7,1],B:["B 普货/日用品/衣服",7,1],C:["C 二线护肤/鞋子/衣服/饰品",9,1],
-C1:["C1 二线包包",12,1],D:["D 液体水奶",6,1],E:["E 普通鞋类",7.5,1],
-H:["H 电子产品/胃药",9.5,1],W:["W 普通手表",10,2],U:["U 回国行李",7.5,30]
+A:["A 食品/保健品/奶粉",7,1],
+B:["B 普货/日用品/衣服",7,1],
+C:["C 二线护肤/鞋子/衣服/饰品",9,1],
+C1:["C1 二线包包",12,1],
+D:["D 液体水奶",6,1],
+E:["E 普通鞋类",7.5,1],
+H:["H 电子产品/胃药",9.5,1],
+W:["W 普通手表",10,2],
+U:["U 回国行李",7.5,30]
 };
 function n(id){return parseFloat(document.getElementById(id).value)||0}
 function usd1(x){return "$"+Number(x||0).toFixed(1)}
@@ -122,16 +123,20 @@ function ex1(x){return Number(x||0).toFixed(1)}
 function pct(x){return Number(x||0).toFixed(1)+"%"}
 function getData(){
 let key=document.getElementById("line").value, line=lines[key];
-let weight=n("weight"), value=n("value"), fee=n("fee"), fixedProfit=n("profit"), costRate=n("costRate"), costFee=n("costFee");
-let fixedCostUsd=n("fixedCostUsd"), fixedCostRmb=n("fixedCostRmb"), ex=n("ex");
+let weight=n("weight"), value=n("value"), fee=n("fee"), costRate=n("costRate");
+let profitUsd=n("profitUsd"), profitRmb=n("profitRmb"), ex=n("ex");
 let bill=weight>0?Math.max(Math.ceil(weight),line[2]):0;
-let sellRate=line[1], sellShip=bill*sellRate, totalUsd=sellShip+value+fee+fixedProfit, totalRmb=totalUsd*ex;
-let costShip=bill*costRate, fixedCostRmbToUsd=ex>0?fixedCostRmb/ex:0;
-let totalCost=costShip+costFee+fixedCostUsd+fixedCostRmbToUsd;
+let sellRate=line[1], sellShip=bill*sellRate;
+let profitRmbToUsd=ex>0?profitRmb/ex:0;
+let totalUsd=sellShip+value+fee+profitUsd+profitRmbToUsd;
+let totalRmb=(sellShip+value+fee+profitUsd)*ex+profitRmb;
+let costShip=bill*costRate;
 let shipProfit=sellShip-costShip;
-let totalProfit=sellShip+fee+fixedProfit-totalCost;
-let margin=totalUsd>0?totalProfit/totalUsd*100:0, shipMargin=sellShip>0?shipProfit/sellShip*100:0, profitPerLb=bill>0?totalProfit/bill:0;
-return {key,name:line[0],sellRate,weight,value,fee,fixedProfit,costRate,costFee,fixedCostUsd,fixedCostRmb,fixedCostRmbToUsd,ex,bill,sellShip,totalUsd,totalRmb,costShip,totalCost,shipProfit,totalProfit,margin,shipMargin,profitPerLb};
+let totalProfit=sellShip+fee+profitUsd+profitRmbToUsd-costShip;
+let margin=totalUsd>0?totalProfit/totalUsd*100:0;
+let shipMargin=sellShip>0?shipProfit/sellShip*100:0;
+let profitPerLb=bill>0?totalProfit/bill:0;
+return {key,name:line[0],sellRate,weight,value,fee,costRate,profitUsd,profitRmb,profitRmbToUsd,ex,bill,sellShip,totalUsd,totalRmb,costShip,shipProfit,totalProfit,margin,shipMargin,profitPerLb};
 }
 function updateRateButtons(){
 let current=ex1(n("ex"));
@@ -141,17 +146,28 @@ function setRate(v){document.getElementById("ex").value=ex1(v);calc()}
 function manualRate(){document.getElementById("ex").value=ex1(n("ex"));calc()}
 function calc(){
 let d=getData();
-["fee","profit","costRate","costFee","fixedCostUsd","fixedCostRmb"].forEach(id=>localStorage.setItem("beauty_"+id+"_v31",document.getElementById(id).value));
-localStorage.setItem("beauty_ex_v31",ex1(d.ex));
-document.getElementById("rmb").innerText=rmb1(d.totalRmb);document.getElementById("usd").innerText=usd1(d.totalUsd);
-document.getElementById("actual").innerText=d.weight+" lb";document.getElementById("bill").innerText=d.bill+" lb";document.getElementById("ship").innerText=usd1(d.sellShip);
-document.getElementById("valueOut").innerText=usd1(d.value);document.getElementById("feeOut").innerText=usd1(d.fee);document.getElementById("profitOut").innerText=usd1(d.fixedProfit);document.getElementById("exOut").innerText=ex1(d.ex);
-document.getElementById("totalProfit").innerText=usd1(d.totalProfit);document.getElementById("totalProfit").classList.toggle("loss", d.totalProfit<0);
-document.getElementById("costShip").innerText=usd1(d.costShip);document.getElementById("costFeeOut").innerText=usd1(d.costFee);
-document.getElementById("fixedCostUsdOut").innerText=usd1(d.fixedCostUsd);document.getElementById("fixedCostRmbOut").innerText=rmb1(d.fixedCostRmb);
-document.getElementById("fixedCostRmbToUsdOut").innerText=usd1(d.fixedCostRmbToUsd);document.getElementById("totalCost").innerText=usd1(d.totalCost);
-document.getElementById("shipProfit").innerText=usd1(d.shipProfit);document.getElementById("margin").innerText=pct(d.margin);document.getElementById("shipMargin").innerText=pct(d.shipMargin);document.getElementById("profitPerLb").innerText=usd1(d.profitPerLb)+"/lb";
-updateRateButtons();return d;
+["fee","costRate","profitUsd","profitRmb"].forEach(id=>localStorage.setItem("beauty_"+id+"_v32_fixed",document.getElementById(id).value));
+localStorage.setItem("beauty_ex_v32_fixed",ex1(d.ex));
+document.getElementById("rmb").innerText=rmb1(d.totalRmb);
+document.getElementById("usd").innerText=usd1(d.totalUsd);
+document.getElementById("actual").innerText=d.weight+" lb";
+document.getElementById("bill").innerText=d.bill+" lb";
+document.getElementById("ship").innerText=usd1(d.sellShip);
+document.getElementById("valueOut").innerText=usd1(d.value);
+document.getElementById("feeOut").innerText=usd1(d.fee);
+document.getElementById("profitUsdOut").innerText=usd1(d.profitUsd);
+document.getElementById("profitRmbOut").innerText=rmb1(d.profitRmb);
+document.getElementById("profitRmbToUsdOut").innerText=usd1(d.profitRmbToUsd);
+document.getElementById("exOut").innerText=ex1(d.ex);
+document.getElementById("totalProfit").innerText=usd1(d.totalProfit);
+document.getElementById("totalProfit").classList.toggle("loss", d.totalProfit<0);
+document.getElementById("costShip").innerText=usd1(d.costShip);
+document.getElementById("shipProfit").innerText=usd1(d.shipProfit);
+document.getElementById("margin").innerText=pct(d.margin);
+document.getElementById("shipMargin").innerText=pct(d.shipMargin);
+document.getElementById("profitPerLb").innerText=usd1(d.profitPerLb)+"/lb";
+updateRateButtons();
+return d;
 }
 function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>alert("已复制"))}else{prompt("复制以下内容：",t)}}
 function copyTotal(){let d=calc();copyText(rmb1(d.totalRmb))}
@@ -163,7 +179,8 @@ function copyDetail(){let d=calc();copyText(`Beauty Ship Express 美邮购
 国际运费：${usd1(d.sellShip)}
 商品价值：${usd1(d.value)}
 操作费：${usd1(d.fee)}
-服务费：${usd1(d.fixedProfit)}
+服务费：${usd1(d.profitUsd)}
+人民币服务费：${rmb1(d.profitRmb)}
 
 美元总价：${usd1(d.totalUsd)}
 汇率：${ex1(d.ex)}
@@ -174,21 +191,24 @@ function copyProfit(){let d=calc();copyText(`内部利润分析
 
 客户运费：${usd1(d.sellShip)}
 成本运费：${usd1(d.costShip)}
-成本操作费：${usd1(d.costFee)}
-固定成本$：${usd1(d.fixedCostUsd)}
-固定成本¥：${rmb1(d.fixedCostRmb)}
-人民币成本折美元：${usd1(d.fixedCostRmbToUsd)}
+操作费：${usd1(d.fee)}
+固定利润$：${usd1(d.profitUsd)}
+固定利润¥：${rmb1(d.profitRmb)}
+人民币利润折美元：${usd1(d.profitRmbToUsd)}
 
-总成本：${usd1(d.totalCost)}
 总利润：${usd1(d.totalProfit)}
 总利润率：${pct(d.margin)}
 运费利润率：${pct(d.shipMargin)}
 每磅利润：${usd1(d.profitPerLb)}/lb`)}
 window.onload=function(){
-["fee","profit","costRate","costFee","fixedCostUsd","fixedCostRmb"].forEach(id=>{let v=localStorage.getItem("beauty_"+id+"_v31");if(v!==null)document.getElementById(id).value=v});
-let ex=localStorage.getItem("beauty_ex_v31");if(ex!==null)document.getElementById("ex").value=ex;
-calc(); 
+["fee","costRate","profitUsd","profitRmb"].forEach(id=>{let v=localStorage.getItem("beauty_"+id+"_v32_fixed");if(v!==null)document.getElementById(id).value=v});
+let ex=localStorage.getItem("beauty_ex_v32_fixed");if(ex!==null)document.getElementById("ex").value=ex;
+calc();
 }
 </script>
 </body>
-</html>
+</html>"""
+
+path = Path("/mnt/data/beauty_ship_quote_v32_fixed.html")
+path.write_text(html, encoding="utf-8")
+print(path)
